@@ -31,4 +31,4 @@ MIT licensed; original attribution is retained in LICENSE.
 
 ## Current Canva artwork
 
-All twelve supplied SVG pieces are installed, including the separately exported orange knight (`bn.svg`, page 4 of the latest Canva ZIP). The exports embed RGB images without an alpha channel and have opaque white backgrounds; the chequered pattern is present in the embedded artwork. Original exports are retained without modifying the artwork. Transparent PNGs with the documented filenames automatically take precedence when supplied.
+All twelve latest Canva SVG exports are installed. The orange knight uses a transparent PNG cutout (`bn.png`) made from the supplied illustration; it takes precedence over the retained original SVG. The other SVGs still embed RGB images with a chequered background, although the latest exports remove the surrounding white SVG rectangles. Transparent PNGs with the documented filenames automatically take precedence when supplied.
