@@ -28,3 +28,7 @@ Fredoka headings and buttons; Nunito body text, both bundled for offline use. Bl
 The supplied GitHub Actions workflow builds and deploys to GitHub Pages. In repository Settings → Pages, choose GitHub Actions as the source. The relative Vite base supports a repository URL. The separate `football-chess` PWA identity and storage keys avoid sharing saved games with Squishy Chess.
 
 MIT licensed; original attribution is retained in LICENSE.
+
+## Current Canva artwork
+
+Eleven supplied SVG pieces are installed. The orange knight (`bn.svg`) is still a temporary jersey: export page 3 contained a multi-character reference composition rather than a separate orange knight. Several supplied illustrations include a baked-in chequered background; transparent re-exports will improve their appearance on the pitch. Original exports are retained without modifying the artwork.
