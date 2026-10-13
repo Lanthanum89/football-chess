@@ -168,8 +168,6 @@ try {
   const retryRect = await evaluate("(()=>{const r=document.querySelector('.rotation-retry').getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2}})()")
   await call('Input.dispatchMouseEvent', {type:'mousePressed',button:'left',clickCount:1,...retryRect})
   await call('Input.dispatchMouseEvent', {type:'mouseReleased',button:'left',clickCount:1,...retryRect})
-  // CDP user activation keeps fullscreen reliable in headless Chromium.
-  await call('Runtime.evaluate', {expression: "document.querySelector('.rotation-retry')?.click()", userGesture: true})
   await waitFor("!!document.fullscreenElement && !document.querySelector('.rotation-retry')")
   assert.equal(await evaluate('rotationRequests.at(-1)'), 'portrait')
   await evaluate("Object.defineProperty(screen.orientation,'lock',{configurable:true,value:async(type)=>{rotationRequests.push(type)}}); document.querySelector('.screen-options input[value=auto]').click()")
