@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <title>Football Chess diagnostics</title>
+    <style>
+      body { font: 16px/1.45 system-ui, sans-serif; margin: 16px; background: #fff4f8; color: #3a2430; }
+      h1 { font-size: 20px; margin: 0 0 8px; }
+      pre { white-space: pre-wrap; word-break: break-word; background: #fff; padding: 12px; border-radius: 12px; font-size: 14px; }
+      .ok { color: #0a7a3d; } .bad { color: #b3261e; font-weight: 700; }
+    </style>
+  </head>
+  <body>
+    <h1>Football Chess diagnostics</h1>
+    <p>Screenshot this whole page and the browser's install message. Service worker registration means offline support, not that the app is installed.</p>
+    <p>Chrome's Android menu can mistake another app on this domain for Chess. This test uses the browser's PWA prompt directly when it is available.</p>
+    <button id="install" type="button" disabled>Waiting for an install prompt…</button>
+    <p id="install-status" role="status">Open the game first, then return here. If no prompt becomes available, send the diagnostic output below.</p>
+    <pre id="out">Running...</pre>
+    <script>
+      const out = document.getElementById('out')
+      const lines = []
+      const log = (t, cls) => {
+        lines.push(cls ? `<span class="${cls}">${t}</span>` : t)
+        out.innerHTML = lines.join('\n')
+      }
+      const esc = (s) => String(s).replace(/[<>&]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' })[c])
+      const ok = (t) => log('OK   ' + esc(t), 'ok')
+      const bad = (t) => log('FAIL ' + esc(t), 'bad')
+      const info = (t) => log('     ' + esc(t))
+
+      let installPromptSeen = false
+      let pendingInstall
+      const installButton = document.getElementById('install')
+      const installStatus = document.getElementById('install-status')
+      window.addEventListener('beforeinstallprompt', (event) => {
+        event.preventDefault()
+        pendingInstall = event
+        installPromptSeen = true
+        installButton.disabled = false
+        installButton.textContent = 'Try installing Football Chess'
+        installStatus.textContent = 'Chrome offers a direct PWA prompt. Tap the button to test it without the install menu.'
+        ok('beforeinstallprompt fired (browser offers installation)')
+      })
+      installButton.addEventListener('click', async () => {
+        if (!pendingInstall) return
+        const prompt = pendingInstall
+        pendingInstall = null
+        installButton.disabled = true
+        try {
+          await prompt.prompt()
+          const choice = await prompt.userChoice
+          info('direct install prompt outcome: ' + choice.outcome)
+          installStatus.textContent = choice.outcome === 'accepted'
+            ? 'Installation was accepted. Wait for completion, then open Chess from your app list. Acceptance alone does not confirm that installation finished.'
+            : 'The prompt was dismissed. Reload this page before trying again.'
+        } catch (error) {
+          bad('direct install prompt failed: ' + error)
+          installStatus.textContent = 'Chrome could not show the direct prompt. Send the diagnostic output below.'
+        }
+        installButton.textContent = 'Reload to test again'
+      })
+      window.addEventListener('appinstalled', () => {
+        ok('appinstalled event fired')
+        installButton.disabled = true
+        installButton.textContent = 'Installation reported by Chrome'
+        installStatus.textContent = 'Chrome reported installation. Check whether Chess opens from your app list.'
+      })
+
+      ;(async () => {
+        info('time: ' + new Date().toISOString())
+        info('url: ' + location.href)
+        info('ua: ' + navigator.userAgent)
+        ;(window.isSecureContext ? ok : bad)('secure context: ' + window.isSecureContext)
+        info('display-mode standalone: ' + matchMedia('(display-mode: standalone)').matches)
+        info('iOS standalone: ' + (navigator.standalone === true))
+        info('Standalone mode describes this window, not all installations on the device.')
+
+        let manifest
+        let appId
+        const manifestUrl = new URL('manifest.webmanifest', location.href)
+        const expectedScope = new URL('./', manifestUrl)
+        try {
+          const r = await fetch(manifestUrl.href, { cache: 'no-store' })
+          info('manifest: HTTP ' + r.status + ' ' + r.headers.get('content-type'))
+          if (!r.ok) throw new Error('HTTP ' + r.status)
+          manifest = await r.json()
+          ok('manifest parsed')
+          for (const k of ['id', 'name', 'start_url', 'scope', 'display', 'orientation']) info('  ' + k + ': ' + manifest[k])
+          const base = manifestUrl
+          const startUrl = new URL(manifest.start_url, base)
+          const scope = new URL(manifest.scope, base)
+          const declaredId = new URL(manifest.id || startUrl.href, startUrl.origin + '/')
+          const resolvedId = declaredId.origin === startUrl.origin ? declaredId : new URL(startUrl.href)
+          resolvedId.hash = ''
+          appId = resolvedId.href
+          info('  resolved id: ' + appId)
+          info('  resolved start_url: ' + startUrl.href)
+          info('  resolved scope: ' + scope.href)
+          ;(startUrl.href.startsWith(scope.href) ? ok : bad)('start_url is inside scope')
+          for (const i of manifest.icons || []) {
+            const u = new URL(i.src, base).href
+            const res = await fetch(u, { cache: 'no-store' })
+            const blob = await res.blob()
+            const bmp = await createImageBitmap(blob).catch(() => null)
+            const size = bmp ? bmp.width + 'x' + bmp.height : 'unreadable'
+            ;(res.ok && bmp ? ok : bad)('icon ' + i.src + ' (' + (i.purpose || 'any') + '): HTTP ' + res.status + ', ' + size + ', declared ' + i.sizes)
+          }
+        } catch (e) {
+          bad('manifest failed: ' + e)
+        }
+
+        if (!('serviceWorker' in navigator)) bad('no serviceWorker support')
+        else {
+          try {
+            const regs = await navigator.serviceWorker.getRegistrations()
+            const ownRegs = regs.filter((r) => r.scope === expectedScope.href)
+            if (!ownRegs.length) bad('no Chess service worker registration at ' + expectedScope.href + ' (open the game page first, then come back)')
+            for (const r of regs) {
+              const own = r.scope === expectedScope.href
+              ;(own && r.active ? ok : info)((own ? 'Chess' : 'Other app') + ' SW scope ' + r.scope + ' active=' + !!r.active + ' waiting=' + !!r.waiting)
+              if (own && !r.active) info('Chess worker is not active yet; revisit after activation.')
+              if (r.active) info('  worker script: ' + r.active.scriptURL)
+            }
+            const controller = navigator.serviceWorker.controller
+            info('page controlled by SW: ' + !!controller)
+            if (controller) info('  controlling script: ' + controller.scriptURL)
+            info('Fetches below may pass through the controlling worker even with cache: no-store.')
+            const sw = await fetch('sw.js', { cache: 'no-store' })
+            ;(sw.ok ? ok : bad)('sw.js: HTTP ' + sw.status)
+            info('caches: ' + (await caches.keys()).join(', '))
+          } catch (e) {
+            bad('service worker check failed: ' + e)
+          }
+        }
+
+        if (typeof navigator.getInstalledRelatedApps === 'function') {
+          try {
+            const related = manifest && manifest.related_applications || []
+            const selfDeclared = related.some((app) => app.platform === 'webapp' &&
+              new URL(app.url, manifestUrl).href === manifestUrl.href &&
+              app.id && new URL(app.id, manifestUrl.origin + '/').href === appId)
+            if (!selfDeclared) info('Chess self-reference is missing from related_applications; installation lookup is inconclusive.')
+            const installed = await navigator.getInstalledRelatedApps()
+            info('installed related apps: ' + JSON.stringify(installed))
+            const chessInstalled = selfDeclared && installed.some((app) => app.platform === 'webapp' &&
+              ((app.url && new URL(app.url, manifestUrl).href === manifestUrl.href) ||
+                (app.id && new URL(app.id, manifestUrl.origin + '/').href === appId)))
+            if (chessInstalled) ok('browser reports Chess installed on this device')
+            else info('Chess was not reported by this API. This does not prove it is uninstalled in every browser.')
+          } catch (e) {
+            info('getInstalledRelatedApps: ' + e)
+          }
+        } else info('Installed-related-apps API is unsupported; installation status is unknown.')
+        info('--- checks done ---')
+        setTimeout(() => {
+          if (!installPromptSeen) info('No beforeinstallprompt observed after 5 seconds. This alone does not mean already installed; browser support and installability also affect it.')
+        }, 5000)
+      })()
+    </script>
+  </body>
+</html>
+

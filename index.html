@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#d4edff" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="icon" type="image/svg+xml" href="icon.svg" />
+    <link rel="apple-touch-icon" href="icon.svg" />
+    <script>
+      // Resolve the saved theme and layout before first paint so neither flashes the wrong way
+      ;(function () {
+        var t = null
+        try { t = localStorage.getItem('football-theme') } catch (e) {}
+        var dark = t === 'dark' || (t !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches)
+        document.documentElement.dataset.theme = dark ? 'dark' : 'light'
+        if (dark) document.querySelector('meta[name="theme-color"]').content = '#0c2234'
+        var wide = matchMedia('(orientation: landscape)').matches
+        document.documentElement.dataset.layout = wide ? 'landscape' : 'portrait'
+      })()
+    </script>
+    <meta name="description" content="Football Chess: friendly football-themed chess for little champions. Play with a friend or the computer." />
+    <title>Football Chess</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

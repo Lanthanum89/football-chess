@@ -1,0 +1,42 @@
+name: Quality checks
+
+on:
+  push:
+    branches-ignore:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: quality-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm test
+      # build runs the typecheck (tsc -b) before vite build
+      - run: pnpm build
+      - name: Check gameplay and phone layouts
+        run: node scripts/ui-smoke.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ui-screenshots
+          path: ui-screenshots
+          if-no-files-found: ignore
