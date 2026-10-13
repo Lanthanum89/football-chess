@@ -31,4 +31,4 @@ MIT licensed; original attribution is retained in LICENSE.
 
 ## Current Canva artwork
 
-Eleven supplied SVG pieces are installed. The orange knight (`bn.svg`) is still a temporary jersey: export page 3 contained a multi-character reference composition rather than a separate orange knight. Several supplied illustrations include a baked-in chequered background; transparent re-exports will improve their appearance on the pitch. Original exports are retained without modifying the artwork.
+All twelve supplied SVG pieces are installed, including the separately exported orange knight (`bn.svg`, page 4 of the latest Canva ZIP). The exports embed RGB images without an alpha channel and have opaque white backgrounds; the chequered pattern is present in the embedded artwork. Original exports are retained without modifying the artwork. Transparent PNGs with the documented filenames automatically take precedence when supplied.
