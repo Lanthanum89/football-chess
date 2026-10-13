@@ -1,11 +1,11 @@
 import type { Color, PieceSymbol } from 'chess.js'
 
-const IMAGES = import.meta.glob<string>('../assets/football/*.{png,webp,svg}', {
+const IMAGES = import.meta.glob<string>('../assets/football/*.png', {
   eager: true,
   import: 'default',
 })
 
-const src = (color: Color, type: PieceSymbol) => IMAGES[`../assets/football/${color}${type}.png`] ?? IMAGES[`../assets/football/${color}${type}.webp`] ?? IMAGES[`../assets/football/${color}${type}.svg`]
+const src = (color: Color, type: PieceSymbol) => IMAGES[`../assets/football/${color}${type}.png`]
 
 export default function Piece({
   type,

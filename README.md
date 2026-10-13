@@ -17,7 +17,7 @@ pnpm build
 
 ## Canva pieces
 
-Place transparent 512 × 512 PNGs in `src/assets/football/`. Blue: `wk.png`, `wq.png`, `wr.png`, `wb.png`, `wn.png`, `wp.png`. Orange: `bk.png`, `bq.png`, `br.png`, `bb.png`, `bn.png`, `bp.png`. PNGs automatically replace the matching temporary jersey SVG. Keep a consistent baseline and 8% clear margin. Letters on the temporary jerseys identify the standard chess roles; these are placeholders for the Canva characters.
+Place transparent 512 × 512 PNGs in `src/assets/football/`. Blue: `wk.png`, `wq.png`, `wr.png`, `wb.png`, `wn.png`, `wp.png`. Orange: `bk.png`, `bq.png`, `br.png`, `bb.png`, `bn.png`, `bp.png`. The app loads these PNGs directly. Keep a consistent baseline and 8% clear margin. The supplied Canva characters represent the standard chess roles.
 
 ## Design
 
@@ -31,4 +31,4 @@ MIT licensed; original attribution is retained in LICENSE.
 
 ## Current Canva artwork
 
-All twelve latest Canva SVG exports are installed. The orange knight uses a transparent PNG cutout (`bn.png`) made from the supplied illustration; it takes precedence over the retained original SVG. The other SVGs still embed RGB images with a chequered background, although the latest exports remove the surrounding white SVG rectangles. Transparent PNGs with the documented filenames automatically take precedence when supplied.
+All twelve football characters are installed as transparent PNG cutouts made from the supplied Canva illustrations. The app loads only the PNGs so the original SVG exports are not bundled or cached. The original SVGs remain in source for reference. Cutouts were produced with image editing; tiny details may differ from the original exports.
